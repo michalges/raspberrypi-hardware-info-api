@@ -23,5 +23,8 @@ def get_rpi_revision():
 
 def get_device_info():        
     revision = get_rpi_revision()
-    model = REVISION_MAP.get(revision.lower(), "Unknown or unsupported Raspberry Pi model")
+    if revision is not None:
+        model = REVISION_MAP.get(revision.lower(), "Unknown or unsupported Raspberry Pi model")
+    else:
+        model = "Unknown model"
     return {"revision": revision, "model": model}

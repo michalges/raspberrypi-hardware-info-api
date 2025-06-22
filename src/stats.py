@@ -1,6 +1,6 @@
-import psutil, threading, time
+import psutil, time
 from collections import deque
-from datetime import datetime
+from datetime import datetime, timezone
 
 cpu_usage_history = deque(maxlen=100)
 temp_history = deque(maxlen=100)
@@ -48,7 +48,7 @@ def get_storage():
 
 def collect_stats():
     while True:
-        timestamp = datetime.utcnow().timestamp()
+        timestamp = datetime.now(timezone.utc).timestamp()
 
         cpu_usage = get_cpu_usage()
         temp = get_temp()
