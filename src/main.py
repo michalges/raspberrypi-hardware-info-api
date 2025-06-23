@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.endpoints import router
-from src.stats import collect_stats
+from src.get_stats import collect_stats
 import threading
 from contextlib import asynccontextmanager
 
@@ -25,4 +25,7 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-    return {"message": "Hello, World!"}
+    return {
+        "name": "raspberrypi-hardware-info-api",
+        "version": "1.0.0"
+    }

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from src.stats import cpu_usage_history, temp_history, ram_history, storage_history
+from src.get_stats import cpu_usage_history, temp_history, ram_history, storage_history
 from src.get_device_info import get_device_info
 
 router = APIRouter()
@@ -48,3 +48,12 @@ def get_storage_history():
 @router.get("/device")
 def device():
     return get_device_info()
+
+@router.get("/system-stats")
+def system_stats():
+    stats = {}
+    stats.update(get_cpu())
+    stats.update(get_temp())
+    stats.update(get_ram())
+    stats.update(get_storage())
+    return stats
