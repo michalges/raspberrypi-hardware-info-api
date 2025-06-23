@@ -11,6 +11,7 @@ REVISION_MAP = {
     "d04171": "Raspberry Pi 5 8GB",
 }
 
+
 def get_rpi_revision():
     try:
         with open("/proc/cpuinfo") as f:
@@ -21,10 +22,12 @@ def get_rpi_revision():
         return None
 
 
-def get_device_info():        
+def get_device_info():
     revision = get_rpi_revision()
     if revision is not None:
-        model = REVISION_MAP.get(revision.lower(), "Unknown or unsupported Raspberry Pi model")
+        model = REVISION_MAP.get(
+            revision.lower(), "Unknown or unsupported Raspberry Pi model"
+        )
     else:
         model = "Unknown model"
     return {"revision": revision, "model": model}

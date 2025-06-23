@@ -8,11 +8,13 @@ temp_history = deque(maxlen=100)
 ram_history = deque(maxlen=100)
 storage_history = deque(maxlen=100)
 
+
 def get_cpu_usage():
     try:
         return psutil.cpu_percent(interval=None)
     except:
         return None
+
 
 def get_temp():
     try:
@@ -20,6 +22,7 @@ def get_temp():
             return int(f.read().strip()) / 1000
     except:
         return None
+
 
 def get_ram():
     try:
@@ -29,23 +32,25 @@ def get_ram():
             "ram_total": round(mem.total / 1024**2, 2),
             "ram_available": round(mem.available / 1024**2, 2),
             "ram_percent_used": mem.percent,
-            "ram_unit": "MB"
+            "ram_unit": "MB",
         }
     except:
         return None
 
+
 def get_storage():
     try:
-        disk = psutil.disk_usage('/')
+        disk = psutil.disk_usage("/")
         return {
             "storage_used": round(disk.used / 1024**3, 2),
             "storage_total": round(disk.total / 1024**3, 2),
             "storage_available": round(disk.free / 1024**3, 2),
             "storage_percent_used": disk.percent,
-            "storage_unit": "GB"
+            "storage_unit": "GB",
         }
     except:
         return None
+
 
 def collect_stats():
     while True:
