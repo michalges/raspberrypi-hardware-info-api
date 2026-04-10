@@ -9,7 +9,7 @@ from app.metrics.get_temperature import get_temperature
 from app.metrics.get_ram import get_ram
 from app.metrics.get_storage import get_storage
 
-RETENTION_PERIOD = timedelta(minutes=60)
+RETENTION_PERIOD = timedelta(days=1)
 FETCH_INTERVAL = 5
 
 
