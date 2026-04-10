@@ -20,8 +20,8 @@ API was made to work with [web interface](https://github.com/michalges/raspberry
 - clone repository:
 
     ```bash
-    git clone https://github.com/michalges/raspberrypi-hardware-info-api
-    cd raspberrypi-hardware-info-api
+    git clone https://github.com/michalges/hardware-info-api
+    cd hardware-info-api
     ```
 
 - run docker script:

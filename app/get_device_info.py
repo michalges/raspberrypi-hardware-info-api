@@ -1,3 +1,6 @@
+import psutil
+
+
 RPI_MODEL_NAMES = {
     "a02082": "Raspberry Pi 3 Model B",
     "a22082": "Raspberry Pi 3 Model B",
@@ -32,5 +35,5 @@ def get_device_model():
     return device
 
 
-def get_device():
+def get_device_info():
     return {"device_name": get_device_model()}
