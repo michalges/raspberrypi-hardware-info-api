@@ -2,10 +2,15 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import Any
 from sqlmodel import Session, asc, desc, select, text
+from fastapi import HTTPException
 
 from app.db.models import SystemMetrics
 from app.get_device_info import get_device_info
 from app.system_info import get_device_ram_info, get_device_storage_info
+
+INTERVAL_ERROR = (
+    "Invalid interval: {interval}. Use formats like '1 minute', '5 seconds', '1 hour'."
+)
 
 device_info = get_device_info()
 device_ram_info = get_device_ram_info()
@@ -44,7 +49,14 @@ def _fetch_detailed_history_generic(
         ORDER BY bucket_start ASC
     """
     )
-    results = session.execute(query, {"interval": interval}).all()
+    try:
+        results = session.execute(query, {"interval": interval}).all()
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail=INTERVAL_ERROR.format(interval=interval),
+        )
+
     return [
         {
             "timestamp": r[0],
@@ -89,6 +101,7 @@ def fetch_all_metrics(session: Session):
     record = _get_latest_record(session)
     if not record:
         return {**device_ram_info, **device_storage_info}
+
     return {
         **record.model_dump(),
         **device_ram_info,
@@ -128,7 +141,13 @@ def fetch_detailed_history(session: Session, interval: str = "1 minute"):
         ORDER BY bucket_start ASC
     """
     )
-    results = session.execute(query, {"interval": interval}).all()
+    try:
+        results = session.execute(query, {"interval": interval}).all()
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail=INTERVAL_ERROR.format(interval=interval),
+        )
     return [
         {
             "timestamp": r[0],
