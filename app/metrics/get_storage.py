@@ -1,8 +1,9 @@
 import psutil
+from app.utils import bytes_to_gb
 
 
 def get_storage():
     try:
-        return round(psutil.disk_usage("/").used / 1024**3, 2)
+        return bytes_to_gb(psutil.disk_usage("/").used)
     except:
         return None

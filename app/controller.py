@@ -7,13 +7,14 @@ import psutil
 
 from app.db.models import SystemMetrics
 from app.get_device_info import get_device_info
+from app.utils import bytes_to_gb
 
 
 def get_device_ram_info():
     try:
         mem = psutil.virtual_memory()
         return {
-            "ram_total": round(mem.total / 1024**3, 2),
+            "ram_total": bytes_to_gb(mem.total),
             "ram_unit": "GB",
         }
     except:
@@ -27,7 +28,7 @@ def get_device_storage_info():
     try:
         disk = psutil.disk_usage("/")
         return {
-            "storage_total": round(disk.total / 1024**3, 2),
+            "storage_total": bytes_to_gb(disk.total),
             "storage_unit": "GB",
         }
     except:

@@ -1,5 +1,3 @@
-import psutil
-
 
 RPI_MODEL_NAMES = {
     "a02082": "Raspberry Pi 3 Model B",
