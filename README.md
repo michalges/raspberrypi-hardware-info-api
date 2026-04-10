@@ -1,19 +1,20 @@
-# Raspberry Pi hardware info API
+# Hardware Info API
 
-A lightweight Python-based API designed to run on your Raspberry Pi, providing real-time monitoring of system metrics including CPU usage, temperature, RAM, and storage.
+A lightweight Python-based API designed to run on any device, providing real-time monitoring of system metrics including CPU usage, temperature, RAM, and storage.
 
-API was made to work with [web interface](https://github.com/michalges/raspberrypi-web-app)
+Can be used with a dedicated [web interface](https://github.com/michalges/raspberrypi-web-app).
 
 ## Used Technologies
 
 - Python
 - FastAPI
+- DuckDB
 - Docker
 
 ## Requirements
 
-- Any Raspberry Pi model
-- Docker and Git installed on the Raspberry Pi
+- Git
+- Docker
 
 ## How to run
 
@@ -24,15 +25,12 @@ API was made to work with [web interface](https://github.com/michalges/raspberry
     cd hardware-info-api
     ```
 
-- run docker script:
+- run Docker container:
 
     ```bash
-    ./docker.sh
+    docker build -t hardware-info-api .
+    docker run -d -p 8080:8080 --name hardware-info-api hardware-info-api
     ```
-
-    This script starts the app and also ensures it will automatically restart and keep running on each boot.
-
-- open [http://localhost:8080](http://localhost:8080) to see the app running
 
 ## Endpoints
 
