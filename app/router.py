@@ -6,7 +6,8 @@ from sqlmodel import Session
 from app import controller
 from app.db.database import get_session
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1")
+metrics_router = APIRouter(prefix="/metrics", tags=["Metrics"])
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
@@ -21,51 +22,54 @@ def get_device_info():
     return controller.fetch_device_info()
 
 
-@router.get("/current_metrics")
+@metrics_router.get("/all")
 def get_current_metrics(session: SessionDep):
-    return controller.fetch_current_metrics(session)
+    return controller.fetch_all_metrics(session)
 
 
-@router.get("/current_metrics/history")
+@metrics_router.get("/all/history")
 def get_current_metrics_history(session: SessionDep):
-    return controller.fetch_current_metrics_history(session)
+    return controller.fetch_all_metrics_history(session)
 
 
-@router.get("/cpu")
+@metrics_router.get("/cpu")
 def get_cpu(session: SessionDep):
     return controller.fetch_cpu_info(session)
 
 
-@router.get("/cpu/history")
+@metrics_router.get("/cpu/history")
 def get_cpu_history(session: SessionDep):
     return controller.fetch_cpu_history(session)
 
 
-@router.get("/temp")
+@metrics_router.get("/temp")
 def get_temp(session: SessionDep):
     return controller.fetch_temp_info(session)
 
 
-@router.get("/temp/history")
+@metrics_router.get("/temp/history")
 def get_temp_history(session: SessionDep):
     return controller.fetch_temp_history(session)
 
 
-@router.get("/ram")
+@metrics_router.get("/ram")
 def get_ram(session: SessionDep):
     return controller.fetch_ram_info(session)
 
 
-@router.get("/ram/history")
+@metrics_router.get("/ram/history")
 def get_ram_history(session: SessionDep):
     return controller.fetch_ram_history(session)
 
 
-@router.get("/storage")
+@metrics_router.get("/storage")
 def get_storage(session: SessionDep):
     return controller.fetch_storage_info(session)
 
 
-@router.get("/storage/history")
+@metrics_router.get("/storage/history")
 def get_storage_history(session: SessionDep):
     return controller.fetch_storage_history(session)
+
+
+router.include_router(metrics_router)

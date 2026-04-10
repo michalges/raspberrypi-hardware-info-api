@@ -65,14 +65,32 @@ def fetch_device_info():
     return device_info
 
 
-def fetch_current_metrics(session: Session):
-    return get_latest_record(session)
+def fetch_all_metrics(session: Session):
+    record = get_latest_record(session)
+
+    if not record:
+        return {
+            **device_ram_info,
+            **device_storage_info,
+        }
+
+    return {
+        **record.model_dump(),
+        **device_ram_info,
+        **device_storage_info,
+    }
 
 
-def fetch_current_metrics_history(session: Session):
-    return session.exec(
-        select(SystemMetrics).order_by(desc(SystemMetrics.timestamp))
-    ).all()
+def fetch_all_metrics_history(session: Session):
+    return {
+        "info": {
+            **device_ram_info,
+            **device_storage_info,
+        },
+        "data": session.exec(
+            select(SystemMetrics).order_by(desc(SystemMetrics.timestamp))
+        ).all(),
+    }
 
 
 def fetch_cpu_info(session: Session):

@@ -3,6 +3,7 @@ import psutil
 
 def get_cpu():
     try:
-        return psutil.cpu_percent(interval=None)
+        val = psutil.cpu_percent(interval=None)
+        return round(val, 2) if val is not None else None
     except:
         return None

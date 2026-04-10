@@ -12,14 +12,14 @@ def get_temp() -> float | None:
             if temps:
                 for name in ["coretemp", "k10temp", "cpu_thermal", "cpu-thermal"]:
                     if name in temps and temps[name]:
-                        return temps[name][0].current
-                return list(temps.values())[0][0].current
+                        return round(temps[name][0].current, 2)
+                return round(list(temps.values())[0][0].current, 2)
         except Exception:
             pass
 
     try:
         with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
-            return int(f.read().strip()) / 1000.0
+            return round(int(f.read().strip()) / 1000.0, 2)
     except Exception:
         pass
 
