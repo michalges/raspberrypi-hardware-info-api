@@ -1,8 +1,13 @@
 from fastapi import APIRouter
 from app.get_stats import cpu_usage_history, temp_history, ram_history, storage_history
-from app.get_device_info import get_device_info
+from app.get_device_info import get_device
 
 router = APIRouter()
+
+
+@router.get("/")
+def get_root():
+    return {"name": "hardware-info-api"}
 
 
 @router.get("/cpu")
@@ -54,15 +59,15 @@ def get_storage_history():
 
 
 @router.get("/device")
-def device_info():
-    return get_device_info()
+def get_device_info():
+    return get_device()
 
 
-@router.get("/system-stats")
+@router.get("/stats")
 def system_stats():
-    stats = {}
-    stats.update(get_cpu())
-    stats.update(get_temp())
-    stats.update(get_ram())
-    stats.update(get_storage())
-    return stats
+    return {
+        "cpu": get_cpu(),
+        "temp": get_temp(),
+        "ram": get_ram(),
+        "storage": get_storage(),
+    }
