@@ -3,57 +3,24 @@ from datetime import datetime
 from typing import Any
 from sqlmodel import Session, asc, desc, select, text
 
-import psutil
-
 from app.db.models import SystemMetrics
 from app.get_device_info import get_device_info
-from app.utils import bytes_to_gb
-
-
-def get_device_ram_info():
-    try:
-        mem = psutil.virtual_memory()
-        return {
-            "ram_total": bytes_to_gb(mem.total),
-            "ram_unit": "GB",
-        }
-    except:
-        return {
-            "ram_total": None,
-            "ram_unit": "GB",
-        }
-
-
-def get_device_storage_info():
-    try:
-        disk = psutil.disk_usage("/")
-        return {
-            "storage_total": bytes_to_gb(disk.total),
-            "storage_unit": "GB",
-        }
-    except:
-        return {
-            "storage_total": None,
-            "storage_unit": "GB",
-        }
-
+from app.system_info import get_device_ram_info, get_device_storage_info
 
 device_info = get_device_info()
 device_ram_info = get_device_ram_info()
 device_storage_info = get_device_storage_info()
 
 
-def get_latest_record(session: Session) -> SystemMetrics | None:
-    """Fetches a single, most recent SystemMetrics record."""
+def _get_latest_record(session: Session) -> SystemMetrics | None:
     return session.exec(
         select(SystemMetrics).order_by(desc(SystemMetrics.timestamp))
     ).first()
 
 
-def get_metric_history(
+def _get_metric_history_raw(
     session: Session, metric_column: Any
 ) -> Sequence[tuple[Any, datetime]]:
-    """Fetches historical data for a specific metric column."""
     return session.exec(
         select(metric_column, SystemMetrics.timestamp).order_by(
             asc(SystemMetrics.timestamp)
@@ -61,7 +28,7 @@ def get_metric_history(
     ).all()
 
 
-def fetch_metric_detailed_history(
+def _fetch_detailed_history_generic(
     session: Session, column_name: str, interval: str = "1 minute"
 ):
     table_name = SystemMetrics.__tablename__
@@ -89,23 +56,52 @@ def fetch_metric_detailed_history(
     ]
 
 
+def _format_metric_response(
+    record: SystemMetrics | None, field_name: str, extra: dict[str, Any] | None = None
+):
+    data: dict[str, Any] = {
+        field_name: getattr(record, field_name, None) if record else None,
+        "timestamp": getattr(record, "timestamp", None) if record else None,
+    }
+    if extra:
+        data.update(extra)
+    return data
+
+
+def _format_history_response(
+    records: Sequence[tuple[Any, datetime]],
+    field_name: str,
+    extra: dict[str, Any] | None = None,
+):
+    data: dict[str, Any] = {
+        "records": [{field_name: val, "timestamp": ts} for val, ts in records]
+    }
+    if extra:
+        data["info"] = extra
+    return data
+
+
 def fetch_device_info():
     return device_info
 
 
 def fetch_all_metrics(session: Session):
-    record = get_latest_record(session)
-
+    record = _get_latest_record(session)
     if not record:
-        return {
-            **device_ram_info,
-            **device_storage_info,
-        }
-
+        return {**device_ram_info, **device_storage_info}
     return {
         **record.model_dump(),
         **device_ram_info,
         **device_storage_info,
+    }
+
+
+def fetch_all_metrics_history(session: Session):
+    return {
+        "info": {**device_ram_info, **device_storage_info},
+        "data": session.exec(
+            select(SystemMetrics).order_by(desc(SystemMetrics.timestamp))
+        ).all(),
     }
 
 
@@ -118,22 +114,21 @@ def fetch_detailed_history(session: Session, interval: str = "1 minute"):
             round(AVG(cpu_usage), 2) as avg_cpu,
             round(MIN(cpu_usage), 2) as min_cpu,
             round(MAX(cpu_usage), 2) as max_cpu,
-            round(AVG(temperature), 2) as avg_temperature,
-            round(MIN(temperature), 2) as min_temperature,
-            round(MAX(temperature), 2) as max_temperature,
+            round(AVG(temperature), 2) as avg_temp,
+            round(MIN(temperature), 2) as min_temp,
+            round(MAX(temperature), 2) as max_temp,
             round(AVG(ram_usage), 2) as avg_ram,
             round(MIN(ram_usage), 2) as min_ram,
             round(MAX(ram_usage), 2) as max_ram,
             round(AVG(storage_usage), 2) as avg_storage,
             round(MIN(storage_usage), 2) as min_storage,
-            round(MAX(storage_usage), 2) as max_storage,
+            round(MAX(storage_usage), 2) as max_storage
         FROM {table_name}
         GROUP BY bucket_start
         ORDER BY bucket_start ASC
     """
     )
     results = session.execute(query, {"interval": interval}).all()
-
     return [
         {
             "timestamp": r[0],
@@ -146,102 +141,73 @@ def fetch_detailed_history(session: Session, interval: str = "1 minute"):
     ]
 
 
-def fetch_all_metrics_history(session: Session):
-    return {
-        "info": {
-            **device_ram_info,
-            **device_storage_info,
-        },
-        "data": session.exec(
-            select(SystemMetrics).order_by(desc(SystemMetrics.timestamp))
-        ).all(),
-    }
-
-
 def fetch_cpu_info(session: Session):
-    record = get_latest_record(session)
-    return (
-        {"cpu_usage": record.cpu_usage, "timestamp": record.timestamp}
-        if record
-        else {"cpu_usage": None, "timestamp": None}
-    )
+    return _format_metric_response(_get_latest_record(session), "cpu_usage")
 
 
 def fetch_cpu_history(session: Session):
-    records = get_metric_history(session, SystemMetrics.cpu_usage)
-    return {"records": [{"cpu_usage": val, "timestamp": ts} for val, ts in records]}
-
-
-def fetch_cpu_detailed_history(session: Session, interval: str = "1 minute"):
-    return {
-        "records": fetch_metric_detailed_history(session, "cpu_usage", interval),
-    }
-
-
-def fetch_temperature_info(session: Session):
-    record = get_latest_record(session)
-    return (
-        {"temperature": record.temperature, "timestamp": record.timestamp}
-        if record
-        else {"temperature": None, "timestamp": None}
+    return _format_history_response(
+        _get_metric_history_raw(session, SystemMetrics.cpu_usage), "cpu_usage"
     )
 
 
+def fetch_cpu_detailed_history(session: Session, interval: str = "1 minute"):
+    return {"records": _fetch_detailed_history_generic(session, "cpu_usage", interval)}
+
+
+def fetch_temperature_info(session: Session):
+    return _format_metric_response(_get_latest_record(session), "temperature")
+
+
 def fetch_temperature_history(session: Session):
-    records = get_metric_history(session, SystemMetrics.temperature)
-    return {"records": [{"temperature": val, "timestamp": ts} for val, ts in records]}
+    return _format_history_response(
+        _get_metric_history_raw(session, SystemMetrics.temperature), "temperature"
+    )
 
 
 def fetch_temperature_detailed_history(session: Session, interval: str = "1 minute"):
     return {
-        "records": fetch_metric_detailed_history(session, "temperature", interval),
+        "records": _fetch_detailed_history_generic(session, "temperature", interval)
     }
 
 
 def fetch_ram_info(session: Session):
-    record = get_latest_record(session)
-    return {
-        "ram_usage": getattr(record, "ram_usage", None),
-        "timestamp": getattr(record, "timestamp", None),
-        **device_ram_info,
-    }
+    return _format_metric_response(
+        _get_latest_record(session), "ram_usage", device_ram_info
+    )
 
 
 def fetch_ram_history(session: Session):
-    records = get_metric_history(session, SystemMetrics.ram_usage)
-    return {
-        "info": device_ram_info,
-        "records": [{"ram_usage": val, "timestamp": ts} for val, ts in records],
-    }
+    return _format_history_response(
+        _get_metric_history_raw(session, SystemMetrics.ram_usage),
+        "ram_usage",
+        device_ram_info,
+    )
 
 
 def fetch_ram_detailed_history(session: Session, interval: str = "1 minute"):
     return {
         "info": device_ram_info,
-        "records": fetch_metric_detailed_history(session, "ram_usage", interval),
+        "records": _fetch_detailed_history_generic(session, "ram_usage", interval),
     }
 
 
 def fetch_storage_info(session: Session):
-    record = get_latest_record(session)
-
-    return {
-        "storage_usage": getattr(record, "storage_usage", None),
-        "timestamp": getattr(record, "timestamp", None),
-        **device_storage_info,
-    }
+    return _format_metric_response(
+        _get_latest_record(session), "storage_usage", device_storage_info
+    )
 
 
 def fetch_storage_history(session: Session):
-    records = get_metric_history(session, SystemMetrics.storage_usage)
-    return {
-        "info": device_storage_info,
-        "records": [{"storage_usage": val, "timestamp": ts} for val, ts in records],
-    }
+    return _format_history_response(
+        _get_metric_history_raw(session, SystemMetrics.storage_usage),
+        "storage_usage",
+        device_storage_info,
+    )
 
 
 def fetch_storage_detailed_history(session: Session, interval: str = "1 minute"):
     return {
         "info": device_storage_info,
-        "records": fetch_metric_detailed_history(session, "storage_usage", interval),
+        "records": _fetch_detailed_history_generic(session, "storage_usage", interval),
     }
