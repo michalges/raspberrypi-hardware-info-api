@@ -32,6 +32,11 @@ def get_current_metrics_history(session: SessionDep):
     return controller.fetch_all_metrics_history(session)
 
 
+@metrics_router.get("/all/detailed-history")
+def get_detailed_history(session: SessionDep, interval: str = "1 minute"):
+    return controller.fetch_detailed_history(session, interval)
+
+
 @metrics_router.get("/cpu")
 def get_cpu(session: SessionDep):
     return controller.fetch_cpu_info(session)
@@ -42,14 +47,24 @@ def get_cpu_history(session: SessionDep):
     return controller.fetch_cpu_history(session)
 
 
-@metrics_router.get("/temp")
-def get_temp(session: SessionDep):
-    return controller.fetch_temp_info(session)
+@metrics_router.get("/cpu/detailed-history")
+def get_cpu_detailed_history(session: SessionDep, interval: str = "1 minute"):
+    return controller.fetch_cpu_detailed_history(session, interval)
 
 
-@metrics_router.get("/temp/history")
-def get_temp_history(session: SessionDep):
-    return controller.fetch_temp_history(session)
+@metrics_router.get("/temperature")
+def get_temperature(session: SessionDep):
+    return controller.fetch_temperature_info(session)
+
+
+@metrics_router.get("/temperature/history")
+def get_temperature_history(session: SessionDep):
+    return controller.fetch_temperature_history(session)
+
+
+@metrics_router.get("/temperature/detailed-history")
+def get_temperature_detailed_history(session: SessionDep, interval: str = "1 minute"):
+    return controller.fetch_temperature_detailed_history(session, interval)
 
 
 @metrics_router.get("/ram")
@@ -62,6 +77,11 @@ def get_ram_history(session: SessionDep):
     return controller.fetch_ram_history(session)
 
 
+@metrics_router.get("/ram/detailed-history")
+def get_ram_detailed_history(session: SessionDep, interval: str = "1 minute"):
+    return controller.fetch_ram_detailed_history(session, interval)
+
+
 @metrics_router.get("/storage")
 def get_storage(session: SessionDep):
     return controller.fetch_storage_info(session)
@@ -70,6 +90,11 @@ def get_storage(session: SessionDep):
 @metrics_router.get("/storage/history")
 def get_storage_history(session: SessionDep):
     return controller.fetch_storage_history(session)
+
+
+@metrics_router.get("/storage/detailed-history")
+def get_storage_detailed_history(session: SessionDep, interval: str = "1 minute"):
+    return controller.fetch_storage_detailed_history(session, interval)
 
 
 router.include_router(metrics_router)

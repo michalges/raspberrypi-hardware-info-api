@@ -1,7 +1,7 @@
 import psutil
 
 
-def get_temp() -> float | None:
+def get_temperature() -> float | None:
     """
     Attempts to get the CPU temperature in Celsius across different operating systems.
     """

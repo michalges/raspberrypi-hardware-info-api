@@ -5,7 +5,7 @@ from sqlalchemy import Engine
 from sqlmodel import Session, col, delete
 from app.db.models import SystemMetrics
 from app.metrics.get_cpu import get_cpu
-from app.metrics.get_temp import get_temp
+from app.metrics.get_temperature import get_temperature
 from app.metrics.get_ram import get_ram
 from app.metrics.get_storage import get_storage
 
@@ -22,7 +22,7 @@ def collect_metrics(engine: Engine):
             new_metric = SystemMetrics(
                 timestamp=current_time,
                 cpu_usage=get_cpu(),
-                temp=get_temp(),
+                temperature=get_temperature(),
                 ram_usage=get_ram(),
                 storage_usage=get_storage(),
             )
