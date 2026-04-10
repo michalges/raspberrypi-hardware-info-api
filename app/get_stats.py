@@ -1,7 +1,7 @@
 import psutil, time
 from collections import deque
 from datetime import datetime, timezone
-from src.config import FETCH_INTERVAL
+from app.config import FETCH_INTERVAL
 
 cpu_usage_history = deque(maxlen=100)
 temp_history = deque(maxlen=100)

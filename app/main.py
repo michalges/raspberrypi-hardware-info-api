@@ -1,9 +1,9 @@
 # uvicorn src.main:app --host 0.0.0.0 --port 8080 --reload
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from src.endpoints import router
-from src.get_stats import collect_stats
-from src.middleware import change_to_camel_case
+from app.endpoints import router
+from app.get_stats import collect_stats
+from app.middleware import change_to_camel_case
 import threading
 from contextlib import asynccontextmanager
 

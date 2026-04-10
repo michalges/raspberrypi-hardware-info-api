@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from src.get_stats import cpu_usage_history, temp_history, ram_history, storage_history
-from src.get_device_info import get_device_info
+from app.get_stats import cpu_usage_history, temp_history, ram_history, storage_history
+from app.get_device_info import get_device_info
 
 router = APIRouter()
 
