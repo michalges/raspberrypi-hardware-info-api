@@ -28,13 +28,13 @@ def get_current_metrics(session: SessionDep):
 
 
 @metrics_router.get("/all/history")
-def get_current_metrics_history(session: SessionDep):
-    return controller.fetch_all_metrics_history(session)
+def get_current_metrics_history(session: SessionDep, limit: int | None = None, offset: int | None = None):
+    return controller.fetch_all_metrics_history(session, limit, offset)
 
 
 @metrics_router.get("/all/detailed-history")
-def get_detailed_history(session: SessionDep, interval: str = "1 minute"):
-    return controller.fetch_detailed_history(session, interval)
+def get_detailed_history(session: SessionDep, interval: str = "1 minute", limit: int | None = None, offset: int | None = None):
+    return controller.fetch_detailed_history(session, interval, limit, offset)
 
 
 @metrics_router.get("/cpu")
@@ -43,13 +43,13 @@ def get_cpu(session: SessionDep):
 
 
 @metrics_router.get("/cpu/history")
-def get_cpu_history(session: SessionDep):
-    return controller.fetch_cpu_history(session)
+def get_cpu_history(session: SessionDep, limit: int | None = None, offset: int | None = None):
+    return controller.fetch_cpu_history(session, limit, offset)
 
 
 @metrics_router.get("/cpu/detailed-history")
-def get_cpu_detailed_history(session: SessionDep, interval: str = "1 minute"):
-    return controller.fetch_cpu_detailed_history(session, interval)
+def get_cpu_detailed_history(session: SessionDep, interval: str = "1 minute", limit: int | None = None, offset: int | None = None):
+    return controller.fetch_cpu_detailed_history(session, interval, limit, offset)
 
 
 @metrics_router.get("/temperature")
@@ -58,13 +58,13 @@ def get_temperature(session: SessionDep):
 
 
 @metrics_router.get("/temperature/history")
-def get_temperature_history(session: SessionDep):
-    return controller.fetch_temperature_history(session)
+def get_temperature_history(session: SessionDep, limit: int | None = None, offset: int | None = None):
+    return controller.fetch_temperature_history(session, limit, offset)
 
 
 @metrics_router.get("/temperature/detailed-history")
-def get_temperature_detailed_history(session: SessionDep, interval: str = "1 minute"):
-    return controller.fetch_temperature_detailed_history(session, interval)
+def get_temperature_detailed_history(session: SessionDep, interval: str = "1 minute", limit: int | None = None, offset: int | None = None):
+    return controller.fetch_temperature_detailed_history(session, interval, limit, offset)
 
 
 @metrics_router.get("/ram")
@@ -73,13 +73,13 @@ def get_ram(session: SessionDep):
 
 
 @metrics_router.get("/ram/history")
-def get_ram_history(session: SessionDep):
-    return controller.fetch_ram_history(session)
+def get_ram_history(session: SessionDep, limit: int | None = None, offset: int | None = None):
+    return controller.fetch_ram_history(session, limit, offset)
 
 
 @metrics_router.get("/ram/detailed-history")
-def get_ram_detailed_history(session: SessionDep, interval: str = "1 minute"):
-    return controller.fetch_ram_detailed_history(session, interval)
+def get_ram_detailed_history(session: SessionDep, interval: str = "1 minute", limit: int | None = None, offset: int | None = None):
+    return controller.fetch_ram_detailed_history(session, interval, limit, offset)
 
 
 @metrics_router.get("/storage")
@@ -88,13 +88,13 @@ def get_storage(session: SessionDep):
 
 
 @metrics_router.get("/storage/history")
-def get_storage_history(session: SessionDep):
-    return controller.fetch_storage_history(session)
+def get_storage_history(session: SessionDep, limit: int | None = None, offset: int | None = None):
+    return controller.fetch_storage_history(session, limit, offset)
 
 
 @metrics_router.get("/storage/detailed-history")
-def get_storage_detailed_history(session: SessionDep, interval: str = "1 minute"):
-    return controller.fetch_storage_detailed_history(session, interval)
+def get_storage_detailed_history(session: SessionDep, interval: str = "1 minute", limit: int | None = None, offset: int | None = None):
+    return controller.fetch_storage_detailed_history(session, interval, limit, offset)
 
 
 router.include_router(metrics_router)

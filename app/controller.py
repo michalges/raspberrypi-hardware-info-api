@@ -24,21 +24,30 @@ def _get_latest_record(session: Session) -> SystemMetrics | None:
 
 
 def _get_metric_history_raw(
-    session: Session, metric_column: Any
+    session: Session,
+    metric_column: Any,
+    limit: int | None = None,
+    offset: int | None = None,
 ) -> Sequence[tuple[Any, datetime]]:
-    return session.exec(
-        select(metric_column, SystemMetrics.timestamp).order_by(
-            asc(SystemMetrics.timestamp)
-        )
-    ).all()
+    statement = select(metric_column, SystemMetrics.timestamp).order_by(
+        desc(SystemMetrics.timestamp)
+    )
+    if limit is not None:
+        statement = statement.limit(limit)
+    if offset is not None:
+        statement = statement.offset(offset)
+    return session.exec(statement).all()
 
 
 def _fetch_detailed_history_generic(
-    session: Session, column_name: str, interval: str = "1 minute"
+    session: Session,
+    column_name: str,
+    interval: str = "1 minute",
+    limit: int | None = None,
+    offset: int | None = None,
 ):
     table_name = SystemMetrics.__tablename__
-    query = text(
-        f"""
+    query_str = f"""
         SELECT
             time_bucket(CAST(:interval AS INTERVAL), timestamp) AS bucket_start,
             round(AVG({column_name}), 2) as avg_val,
@@ -46,11 +55,19 @@ def _fetch_detailed_history_generic(
             round(MAX({column_name}), 2) as max_val
         FROM {table_name}
         GROUP BY bucket_start
-        ORDER BY bucket_start ASC
+        ORDER BY bucket_start DESC
     """
-    )
+    params: dict[str, str | int] = {"interval": interval}
+    if limit is not None:
+        query_str += " LIMIT :limit"
+        params["limit"] = limit
+    if offset is not None:
+        query_str += " OFFSET :offset"
+        params["offset"] = offset
+
+    query = text(query_str)
     try:
-        results = session.execute(query, {"interval": interval}).all()
+        results = session.execute(query, params).all()
     except Exception:
         raise HTTPException(
             status_code=400,
@@ -109,19 +126,29 @@ def fetch_all_metrics(session: Session):
     }
 
 
-def fetch_all_metrics_history(session: Session):
+def fetch_all_metrics_history(
+    session: Session, limit: int | None, offset: int | None = None
+):
+    statement = select(SystemMetrics).order_by(desc(SystemMetrics.timestamp))
+    if limit is not None:
+        statement = statement.limit(limit)
+    if offset is not None:
+        statement = statement.offset(offset)
+
     return {
         "info": {**device_ram_info, **device_storage_info},
-        "data": session.exec(
-            select(SystemMetrics).order_by(desc(SystemMetrics.timestamp))
-        ).all(),
+        "data": session.exec(statement).all(),
     }
 
 
-def fetch_detailed_history(session: Session, interval: str = "1 minute"):
+def fetch_detailed_history(
+    session: Session,
+    interval: str = "1 minute",
+    limit: int | None = None,
+    offset: int | None = None,
+):
     table_name = SystemMetrics.__tablename__
-    query = text(
-        f"""
+    query_str = f"""
         SELECT
             time_bucket(CAST(:interval AS INTERVAL), timestamp) AS bucket_start,
             round(AVG(cpu_usage), 2) as avg_cpu,
@@ -138,11 +165,19 @@ def fetch_detailed_history(session: Session, interval: str = "1 minute"):
             round(MAX(storage_usage), 2) as max_storage
         FROM {table_name}
         GROUP BY bucket_start
-        ORDER BY bucket_start ASC
+        ORDER BY bucket_start DESC
     """
-    )
+    params: dict[str, str | int] = {"interval": interval}
+    if limit is not None:
+        query_str += " LIMIT :limit"
+        params["limit"] = limit
+    if offset is not None:
+        query_str += " OFFSET :offset"
+        params["offset"] = offset
+
+    query = text(query_str)
     try:
-        results = session.execute(query, {"interval": interval}).all()
+        results = session.execute(query, params).all()
     except Exception:
         raise HTTPException(
             status_code=400,
@@ -164,29 +199,51 @@ def fetch_cpu_info(session: Session):
     return _format_metric_response(_get_latest_record(session), "cpu_usage")
 
 
-def fetch_cpu_history(session: Session):
+def fetch_cpu_history(
+    session: Session, limit: int | None = None, offset: int | None = None
+):
     return _format_history_response(
-        _get_metric_history_raw(session, SystemMetrics.cpu_usage), "cpu_usage"
+        _get_metric_history_raw(session, SystemMetrics.cpu_usage, limit, offset),
+        "cpu_usage",
     )
 
 
-def fetch_cpu_detailed_history(session: Session, interval: str = "1 minute"):
-    return {"records": _fetch_detailed_history_generic(session, "cpu_usage", interval)}
+def fetch_cpu_detailed_history(
+    session: Session,
+    interval: str = "1 minute",
+    limit: int | None = None,
+    offset: int | None = None,
+):
+    return {
+        "records": _fetch_detailed_history_generic(
+            session, "cpu_usage", interval, limit, offset
+        )
+    }
 
 
 def fetch_temperature_info(session: Session):
     return _format_metric_response(_get_latest_record(session), "temperature")
 
 
-def fetch_temperature_history(session: Session):
+def fetch_temperature_history(
+    session: Session, limit: int | None = None, offset: int | None = None
+):
     return _format_history_response(
-        _get_metric_history_raw(session, SystemMetrics.temperature), "temperature"
+        _get_metric_history_raw(session, SystemMetrics.temperature, limit, offset),
+        "temperature",
     )
 
 
-def fetch_temperature_detailed_history(session: Session, interval: str = "1 minute"):
+def fetch_temperature_detailed_history(
+    session: Session,
+    interval: str = "1 minute",
+    limit: int | None = None,
+    offset: int | None = None,
+):
     return {
-        "records": _fetch_detailed_history_generic(session, "temperature", interval)
+        "records": _fetch_detailed_history_generic(
+            session, "temperature", interval, limit, offset
+        )
     }
 
 
@@ -196,18 +253,27 @@ def fetch_ram_info(session: Session):
     )
 
 
-def fetch_ram_history(session: Session):
+def fetch_ram_history(
+    session: Session, limit: int | None = None, offset: int | None = None
+):
     return _format_history_response(
-        _get_metric_history_raw(session, SystemMetrics.ram_usage),
+        _get_metric_history_raw(session, SystemMetrics.ram_usage, limit, offset),
         "ram_usage",
         device_ram_info,
     )
 
 
-def fetch_ram_detailed_history(session: Session, interval: str = "1 minute"):
+def fetch_ram_detailed_history(
+    session: Session,
+    interval: str = "1 minute",
+    limit: int | None = None,
+    offset: int | None = None,
+):
     return {
         "info": device_ram_info,
-        "records": _fetch_detailed_history_generic(session, "ram_usage", interval),
+        "records": _fetch_detailed_history_generic(
+            session, "ram_usage", interval, limit, offset
+        ),
     }
 
 
@@ -217,16 +283,25 @@ def fetch_storage_info(session: Session):
     )
 
 
-def fetch_storage_history(session: Session):
+def fetch_storage_history(
+    session: Session, limit: int | None = None, offset: int | None = None
+):
     return _format_history_response(
-        _get_metric_history_raw(session, SystemMetrics.storage_usage),
+        _get_metric_history_raw(session, SystemMetrics.storage_usage, limit, offset),
         "storage_usage",
         device_storage_info,
     )
 
 
-def fetch_storage_detailed_history(session: Session, interval: str = "1 minute"):
+def fetch_storage_detailed_history(
+    session: Session,
+    interval: str = "1 minute",
+    limit: int | None = None,
+    offset: int | None = None,
+):
     return {
         "info": device_storage_info,
-        "records": _fetch_detailed_history_generic(session, "storage_usage", interval),
+        "records": _fetch_detailed_history_generic(
+            session, "storage_usage", interval, limit, offset
+        ),
     }
